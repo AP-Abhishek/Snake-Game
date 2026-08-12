@@ -35,6 +35,7 @@ int main()
     // Game Variables
     bool running = true;
     bool playing = false;
+    bool game_over = false;
     char board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
     
     int score = 0;
@@ -48,9 +49,6 @@ int main()
     bool fruit_consumed = false;
 
     // Game setup
-    getStartPosition(snake_x, snake_y, snake_direction, snake);
-    fruit_pos = spawnFruit(snake);
-    updateBoard(board, snake, fruit_pos);
     windowSetup();
 
     // Game Loop
@@ -60,12 +58,31 @@ int main()
     {
         if (!playing)
         {
+            system("cls");
             cout << BOLD_YELLOW << " ===== " << BOLD_CYAN << " Snake Game " << BOLD_YELLOW << " =====" << RESET << endl;
-            cout << " Press any key to start the game..." << endl;
-            _getch();
-            playing = true;
-        }
+            cout << "\n Press ANY KEY to start playing..." << endl;
+            cout << " Press " << RED << "'Q'" << RESET << " or " << RED << "'q'" << RESET << " to quit application\n" << endl;
+            
+            int menu_input = _getch();
+            if (menu_input == 'Q' || menu_input == 'q')
+            {
+                running = false;
+                break;
+            }
 
+            score = 0;
+            game_over = false;
+            snake.clear(); 
+            getStartPosition(snake_x, snake_y, snake_direction, snake);
+            fruit_pos = spawnFruit(snake);
+            updateBoard(board, snake, fruit_pos);
+            
+            system("cls");
+            playing = true; 
+            last_movement_time = chrono::high_resolution_clock::now();
+            continue;
+        }
+        
         auto frame_start = chrono::high_resolution_clock::now();
 
         // Input Handling
@@ -114,8 +131,7 @@ int main()
             // Board Collsion
             if (next_x < 0 || next_x >= BOARD_WIDTH || next_y < 0 || next_y >= BOARD_HEIGHT)
             {
-                running = false;
-                break;
+                game_over = true;
             }
            
             // Fruit Collision
@@ -130,31 +146,28 @@ int main()
             {
                 if (next_x == snake[i][0] && next_y == snake[i][1])
                 {
-                    running = false;
-                    break;
+                    game_over = true;
                 }
             }
 
-            if (!running)
+            if (!game_over)
             {
-                break;
-            }
-         
-            snake_x = next_x;
-            snake_y = next_y;
-            snake.push_front({ snake_x, snake_y });
-          
-            if (!fruit_consumed) {
-                snake.pop_back();
-            }
-            else
-            {
-                fruit_pos = spawnFruit(snake);
-            }
+                snake_x = next_x;
+                snake_y = next_y;
+                snake.push_front({ snake_x, snake_y });
             
-            updateBoard(board, snake, fruit_pos);
-            fruit_consumed = false;
-            last_movement_time = current_time;
+                if (!fruit_consumed) {
+                    snake.pop_back();
+                }
+                else
+                {
+                    fruit_pos = spawnFruit(snake);
+                }
+                
+                updateBoard(board, snake, fruit_pos);
+                fruit_consumed = false;
+                last_movement_time = current_time;
+            }
         }
 
         // Screen Refreshing
@@ -163,11 +176,45 @@ int main()
         cursor_position.Y = 0;
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursor_position);
 
-        // system("cls");
         cout << BOLD_YELLOW << " ===== " << BOLD_CYAN << " Snake Game " << BOLD_YELLOW << " =====" << RESET << endl;
-        cout << " Press " << RED << "'Q'" << RESET << " or " << RED << "'q'" << RESET << " to quit\n" << endl;
+        cout << " You can alwyas press " << RED << "'Q'" << RESET << " or " << RED << "'q'" << RESET << " to quit\n" << endl;
         cout << BOLD_YELLOW << "   === " << GREEN << "SCORE: " << score << BOLD_YELLOW << " ===\n" << RESET << endl;
         printBoard(board);
+
+        if (game_over)
+        {
+            cout << endl << BOLD_YELLOW << " ===== " << RED << "Game Over" << BOLD_YELLOW << " =====" << RESET << endl;
+            cout << BOLD_YELLOW << "\n Your Final Score: " << GREEN << score << RESET << endl;
+            cout << "\n Press " << GREEN << "'R'" << RESET << " or " << GREEN << "'r'" << RESET << " to Restart Directly" << endl;
+            cout << " Press " << RED << "'Q'" << RESET << " or " << RED << "'q'" << RESET << " to Quit Game" << endl;
+            cout << " Press any other key to return to Main Menu..." << endl;
+            
+            int menu_input = _getch();
+            
+            if (menu_input == 'Q' || menu_input == 'q')
+            {
+                running = false;
+                break;
+            }
+            else if (menu_input == 'R' || menu_input == 'r')
+            {
+                score = 0;
+                game_over = false;
+                snake.clear(); 
+                getStartPosition(snake_x, snake_y, snake_direction, snake);
+                fruit_pos = spawnFruit(snake);
+                updateBoard(board, snake, fruit_pos);
+                
+                system("cls");
+                last_movement_time = chrono::high_resolution_clock::now();
+                continue;
+            }
+            else
+            {
+                playing = false;
+                continue;
+            }
+        }
 
         // Frame-rate managing
         auto frame_end = chrono::high_resolution_clock::now();
@@ -178,10 +225,7 @@ int main()
         }
     }
 
-    if (!running)
-    {
-        cout << endl << BOLD_YELLOW << " ===== " << RED << "Game Over" << BOLD_YELLOW << " =====" << RESET << endl;
-    }
+    cout << endl << BOLD_YELLOW << " ===== " << RED << "Game Exited" << BOLD_YELLOW << " =====" << RESET << endl;
     
     return 0;
 }
