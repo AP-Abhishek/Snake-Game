@@ -24,7 +24,7 @@ const string BLUE = "\033[34m";
 const string BOLD_CYAN = "\033[1;36m";
 
 void getStartPosition(int &snake_x, int &snake_y, int &snake_direction,  deque<vector<int>> &snake);
-void setupGame(char board[BOARD_HEIGHT][BOARD_WIDTH], deque<vector<int>> &snake, vector<int> &fruit_pos);
+void updateBoard(char board[BOARD_HEIGHT][BOARD_WIDTH], deque<vector<int>> &snake, vector<int> &fruit_pos);
 void windowSetup();
 void printBoard(char board[BOARD_HEIGHT][BOARD_WIDTH]);
 Directions getDirection();
@@ -43,12 +43,13 @@ int main()
     int snake_direction = 0;
     deque<vector<int>> snake;
 
-    vector<int> fruit_pos = {0};
+    vector<int> fruit_pos = {0, 0};
     bool fruit_consumed = false;
 
     // Game setup
     getStartPosition(snake_x, snake_y, snake_direction, snake);
-    setupGame(board, snake, fruit_pos);
+    fruit_pos = spawnFruit(snake);
+    updateBoard(board, snake, fruit_pos);
     windowSetup();
 
     // Game Loop
@@ -109,7 +110,7 @@ int main()
             }
            
             // Fruit Collision
-            if (vector({next_x, next_y}) == fruit_pos)
+            if (vector<int>({next_x, next_y}) == fruit_pos)
             {
                 score++;
                 fruit_consumed = true;
@@ -124,24 +125,25 @@ int main()
                     break;
                 }
             }
+
+            if (!running)
+            {
+                break;
+            }
          
             snake_x = next_x;
             snake_y = next_y;
-        
             snake.push_front({ snake_x, snake_y });
-            board[snake_y][snake_x] = 'O';
           
             if (!fruit_consumed) {
-                vector<int> popped = snake.back();
                 snake.pop_back();
-                board[popped[1]][popped[0]] = 'X';
             }
             else
             {
                 fruit_pos = spawnFruit(snake);
-                board[fruit_pos[1]][fruit_pos[0]] = '0';
             }
-        
+            
+            updateBoard(board, snake, fruit_pos);
             fruit_consumed = false;
             last_movement_time = current_time;
         }
@@ -186,9 +188,7 @@ void getStartPosition(int &snake_x, int &snake_y, int &snake_direction,  deque<v
         snake_y = rand() % BOARD_WIDTH;
     } while (snake_y < 3 || snake_y > 7);
 
-    do {
-        snake_direction = (rand() % 6);
-    } while (snake_direction < 1 || snake_direction > 4);
+    snake_direction = (rand() % 4) + 1;
 
     switch(snake_direction)
     {
@@ -225,7 +225,7 @@ void getStartPosition(int &snake_x, int &snake_y, int &snake_direction,  deque<v
     snake_y = snake[0][1];
 }
 
-void setupGame(char board[BOARD_HEIGHT][BOARD_WIDTH], deque<vector<int>> &snake, vector<int> &fruit_pos)
+void updateBoard(char board[BOARD_HEIGHT][BOARD_WIDTH], deque<vector<int>> &snake, vector<int> &fruit_pos)
 {
     for (int i = 0 ; i < BOARD_HEIGHT ; i++)
     {
@@ -240,7 +240,6 @@ void setupGame(char board[BOARD_HEIGHT][BOARD_WIDTH], deque<vector<int>> &snake,
         board[snake[i][1]][snake[i][0]] = 'O';
     }
 
-    fruit_pos = spawnFruit(snake);
     board[fruit_pos[1]][fruit_pos[0]] = '0';
 }
 
