@@ -58,25 +58,6 @@ int main()
     {
         auto frame_start = chrono::high_resolution_clock::now();
 
-        // Body collision
-        for (int i = 1 ; i < snake.size() ; i++)
-        {
-            if (snake[0] == snake[i])
-            {
-                running = false;
-                break;
-            }
-        }
-
-        // Fruit collision
-        if (snake[0] == fruit_pos)
-        {
-            score++;
-            fruit_consumed = true;
-            fruit_pos = spawnFruit(snake);
-            board[fruit_pos[1]][fruit_pos[0]] = '0';
-        }
-
         // Input Handling
         Directions direction = getDirection();
         if (direction == Directions::Quit)
@@ -100,112 +81,78 @@ int main()
         auto current_time = chrono::high_resolution_clock::now();
         auto time_since_last_move = chrono::duration_cast<chrono::milliseconds>(current_time - last_movement_time);
 
-        // Movement Handling
         if (time_since_last_move.count() >= SNAKE_SPEED)
         {
-            switch (snake_direction)
+            int next_x = snake_x;
+            int next_y = snake_y;
+            switch(snake_direction)
             {
             case Directions::Left:
-                snake_x--;
-                if (snake_x < 0) running = false;
+                next_x--;
                 break;
             case Directions::Right:
-                snake_x++;
-                if (snake_x >= BOARD_WIDTH) running = false;
+                next_x++;
                 break;
             case Directions::Up:
-                snake_y--;
-                if (snake_y < 0) running = false;
+                next_y--;
                 break;
             case Directions::Down:
-                snake_y++;
-                if (snake_y >= BOARD_HEIGHT) running = false;
+                next_y++;
                 break;
             }
             
-            if (!running) break;
-            
+            // Board Collsion
+            if (next_x < 0 || next_x >= BOARD_WIDTH || next_y < 0 || next_y >= BOARD_HEIGHT)
+            {
+                running = false;
+                break;
+            }
+           
+            // Fruit Collision
+            if (vector({next_x, next_y}) == fruit_pos)
+            {
+                score++;
+                fruit_consumed = true;
+            }
+        
+            // Self Collision
+            for (int i = 0 ; i < snake.size() ; i++)
+            {
+                if (next_x == snake[i][0] && next_y == snake[i][1])
+                {
+                    running = false;
+                    break;
+                }
+            }
+         
+            snake_x = next_x;
+            snake_y = next_y;
+        
             snake.push_front({ snake_x, snake_y });
             board[snake_y][snake_x] = 'O';
+          
             if (!fruit_consumed) {
                 vector<int> popped = snake.back();
                 snake.pop_back();
                 board[popped[1]][popped[0]] = 'X';
             }
+            else
+            {
+                fruit_pos = spawnFruit(snake);
+                board[fruit_pos[1]][fruit_pos[0]] = '0';
+            }
+        
+            fruit_consumed = false;
             last_movement_time = current_time;
         }
 
-        fruit_consumed = false;
-
-        // if (time_since_last_move.count() >= SNAKE_SPEED)
-        // {
-        //     int next_x = snake_x;
-        //     int next_y = snake_y;
-        //     switch(snake_direction)
-        //     {
-        //     case Directions::Left:
-        //         next_x--;
-        //         break;
-        //     case Directions::Right:
-        //         next_x++;
-        //         break;
-        //     case Directions::Up:
-        //         next_y--;
-        //         break;
-        //     case Directions::Down:
-        //         next_y++;
-        //         break;
-        //     }
-        
-        //     if (next_x < 0 || next_x >= BOARD_WIDTH || next_y < 0 || next_y >= BOARD_HEIGHT)
-        //     {
-        //         running = false;
-        //         break;
-        //     }
-           
-        //     if (vector({next_x, next_y}) == fruit_pos)
-        //     {
-        //         score++;
-        //         fruit_consumed = true;
-        //     }
-        
-        //     for (int i = 0 ; i < snake.size() ; i++)
-        //     {
-        //         if (next_x == snake[i][0] && next_y == snake[i][1])
-        //         {
-        //             running = false;
-        //             break;
-        //         }
-        //     }
-         
-        //     snake_x = next_x;
-        //     snake_y = next_y;
-        
-        //     snake.push_front({ snake_x, snake_y });
-        //     board[snake_y][snake_x] = 'O';
-          
-        //     if (!fruit_consumed) {
-        //         vector<int> popped = snake.back();
-        //         snake.pop_back();
-        //         board[popped[1]][popped[0]] = 'X';
-        //     }
-        //     else
-        //     {
-        //         fruit_pos = spawnFruit(snake);
-        //         board[fruit_pos[1]][fruit_pos[0]] = '0';
-        //     }
-        
-        //     fruit_consumed = false;
-        //     last_movement_time = current_time;
-        // }
-
         // Screen Refreshing
-        // COORD cursor_position;
-        // cursor_position.X = 0;
-        // cursor_position.Y = 0;
-        // SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursor_position);
+        COORD cursor_position;
+        cursor_position.X = 0;
+        cursor_position.Y = 0;
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursor_position);
 
-        system("cls");
+        // system("cls");
         cout << BOLD_YELLOW << " ===== " << BOLD_CYAN << " Snake Game " << BOLD_YELLOW << " =====" << RESET << endl;
         cout << " Press " << RED << "'Q'" << RESET << " or " << RED << "'q'" << RESET << " to quit\n" << endl;
         cout << BOLD_YELLOW << "   === " << GREEN << "SCORE: " << score << BOLD_YELLOW << " ===\n" << RESET << endl;
