@@ -34,6 +34,7 @@ int main()
 {
     // Game Variables
     bool running = true;
+    bool playing = false;
     char board[BOARD_HEIGHT][BOARD_WIDTH] = {0};
     
     int score = 0;
@@ -57,6 +58,14 @@ int main()
     const chrono::milliseconds frameDuration(1000/TARGET_FPS);
     while (running)
     {
+        if (!playing)
+        {
+            cout << BOLD_YELLOW << " ===== " << BOLD_CYAN << " Snake Game " << BOLD_YELLOW << " =====" << RESET << endl;
+            cout << " Press any key to start the game..." << endl;
+            _getch();
+            playing = true;
+        }
+
         auto frame_start = chrono::high_resolution_clock::now();
 
         // Input Handling
