@@ -29,6 +29,7 @@ void windowSetup();
 void printBoard(char board[BOARD_HEIGHT][BOARD_WIDTH]);
 Directions getDirection();
 vector<int> spawnFruit(deque<vector<int>> &snake);
+void windowReset();
 
 int main()
 {
@@ -108,7 +109,7 @@ int main()
         auto current_time = chrono::high_resolution_clock::now();
         auto time_since_last_move = chrono::duration_cast<chrono::milliseconds>(current_time - last_movement_time);
 
-        if (time_since_last_move.count() >= SNAKE_SPEED)
+        if (time_since_last_move.count() >= SNAKE_SPEED  && !game_over)
         {
             int next_x = snake_x;
             int next_y = snake_y;
@@ -226,7 +227,7 @@ int main()
     }
 
     cout << endl << BOLD_YELLOW << " ===== " << RED << "Game Exited" << BOLD_YELLOW << " =====" << RESET << endl;
-    
+    windowReset();
     return 0;
 }
 
@@ -388,4 +389,14 @@ vector<int> spawnFruit(deque<vector<int>> &snake)
     } while (!isPlaceable(x,y));
 
     return {x, y};
+}
+
+void windowReset()
+{
+    HANDLE console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 20;
+    info.bVisible = TRUE;
+    SetConsoleCursorInfo(console_handle, &info);
+    system("cls");
 }
